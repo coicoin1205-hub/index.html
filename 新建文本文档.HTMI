@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汉字趣味学习乐园</title>
+    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #2ecc71;
+            --accent-color: #e74c3c;
+            --bg-color: #f5f7fa;
+            --text-color: #2c3e50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, "Microsoft YaHei";
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 { color: #2c3e50; margin-bottom: 5px; }
+        
+        /* 导航栏 */
+        nav {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        nav button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        nav button.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* 页面容器 */
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            box-sizing: border-box;
+        }
+
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* 学习页面样式 */
+        .word-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 25px;
+            justify-content: center;
+        }
+
+        .word-btn {
+            padding: 8px 16px;
+            background: #edf2f7;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .word-btn.active {
+            border-color: var(--primary-color);
+            background: #e1effe;
+            color: var(--primary-color);
+        }
+
+        .display-card {
+            text-align: center;
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .display-word { font-size: 48px; margin: 10px 0; letter-spacing: 10px; font-weight: bold;}
+        .display-pinyin { font-size: 20px; color: #7f8c8d; }
+        .display-trans { font-size: 22px; color: var(--primary-color); margin-top: 5px; font-weight: 500;}
+
+        /* 汉字书写区 */
+        .writer-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .character-box-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .char-panel {
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .writer-target {
+            border: 2px solid #cbd5e1;
+            background: #fffdf9; /* 米字格背景微黄 */
+            border-radius: 4px;
+            cursor: crosshair;
+        }
+
+        .control-btns {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .control-btns button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #e2e8f0;
+        }
+        .control-btns button:hover { background: #cbd5e1; }
+
+        /* 部件拆分样式 */
+        .components-section {
+            margin-top: 25px;
+            padding: 15px;
+            background: #f0fdf4;
+            border-radius: 8px;
+            border-left: 5px solid var(--secondary-color);
+        }
+        .component-tag {
+            display: inline-block;
+            background: white;
+            border: 1px solid #bbf7d0;
+            padding: 5px 12px;
+            margin: 5px;
+            border-radius: 6px;
+            font-size: 18px;
+        }
+
+        /* 游戏 1 连连看样式 */
+        .game1-container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        .game1-col {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 40%;
+        }
+        .game1-item {
+            padding: 15px;
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 18px;
+            user-select: none;
+            transition: all 0.2s;
+        }
+        .game1-item.selected {
+            background: #e1effe;
+            border-color: var(--primary-color);
+        }
+        .game1-item.matched {
+            background: #d1fae5;
+            border-color: var(--secondary-color);
+            color: #065f46;
+            cursor: default;
+        }
+
+        /* 游戏 2 拼字样式 */
+        .game2-tip { font-size: 20px; text-align: center; margin-bottom: 15px;}
+        .game2-slots {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            min-height: 80px;
+        }
+        .game2-slot {
+            width: 70px;
+            height: 70px;
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            background: #fafafa;
+        }
+        .game2-parts {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            min-height: 60px;
+        }
+        .game2-part {
+            width: 60px;
+            height: 60px;
+            background: #f1f5f9;
+            border: 2px solid #cbd5e1;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: grab;
+            user-select: none;
+        }
+        
+        .action-btn {
+            display: block;
+            margin: 20px auto 0;
+            padding: 10px 25px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .score-board {
+            text-align: center;
+            font-size: 18px;
+            margin-top: 15px;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🎒 汉字趣味学习乐园</h1>
+        <p>看字练笔顺、拆部件、玩游戏，轻松掌握核心词汇</p>
+    </header>
+
+    <nav>
+        <button onclick="switchPage('learn')" id="nav-learn" class="active">📝 笔顺与拆字学习</button>
+        <button onclick="switchPage('game1')" id="nav-game1">🔗 游戏一：词意连连看</button>
+        <button onclick="switchPage('game2')" id="nav-game2">🧩 游戏二：部件组词</button>
+    </nav>
+
+    <div class="container">
+        <div id="page-learn" class="page active">
+            <div class="word-selector" id="word-selector"></div>
+            
+            <div class="display-card">
+                <div class="display-pinyin" id="display-pinyin">拼音</div>
+                <div class="display-word" id="display-word">中文</div>
+                <div class="display-trans" id="display-trans">翻译</div>
+            </div>
+
+            <div class="components-section">
+                <strong>🧩 部件结构拆分：</strong>
+                <div id="components-container" style="display: inline;"></div>
+            </div>
+
+            <h3 style="text-align: center; margin-top:25px;">✍️ 笔顺跟随与描红练习 (请在格内书写)</h3>
+            <div class="writer-section">
+                <div class="character-box-container" id="writer-container"></div>
+            </div>
+        </div>
+
+        <div id="page-game1" class="page">
+            <h3 style="text-align: center;">把中文词语和正确的英文翻译连起来吧！</h3>
+            <div class="game1-container" id="game1-box"></div>
+            <div class="score-board" id="game1-msg"></div>
+            <button class="action-btn" onclick="initGame1()">重新开始</button>
+        </div>
+
+        <div id="page-game2" class="page">
+            <h3 style="text-align: center;">🧩 根据英文提示，把正确的字、词部件拖入框中拼出来！</h3>
+            <div class="game2-tip" id="game2-hint">提示：拼音/翻译</div>
+            <div class="game2-slots" id="game2-slots"></div>
+            <div class="game2-parts" id="game2-parts"></div>
+            <div class="score-board" id="game2-msg"></div>
+            <button class="action-btn" onclick="initGame2()">下一题</button>
+        </div>
+    </div>
+
+    <script>
+        // 数据配置
+        const vocabulary = [
+            { word: "随即", pinyin: "suí jí", trans: "immediately / presently", parts: ["辶", "阝", "及"], structures: "随：左右结构（含辶），即：左右结构" },
+            { word: "心意", pinyin: "xīn yì", trans: "regard / kindly feeling", parts: ["心", "立", "日"], structures: "心：独体字，意：上中下结构（立+日+心）" },
+            { word: "时光", pinyin: "shí guāng", trans: "time / era", parts: ["日", "寸", "⺌", "兀"], structures: "时：左右结构（日+寸），光：上下结构" },
+            { word: "叮当", pinyin: "dīng dāng", trans: "clank / ding-dong", parts: ["口", "丁", "当"], structures: "叮：左右结构（口+丁），当：上下结构" },
+            { word: "棒球", pinyin: "bàng qiú", trans: "baseball", parts: ["木", "奉", "王", "求"], structures: "棒：左右结构（木+奉），球：左右结构（王+求）" },
+            { word: "高明", pinyin: "gāo míng", trans: "wise / brilliant", parts: ["高", "日", "月"], structures: "高：上中下/独体变异，明：左右结构（日+月）" },
+            { word: "周年", pinyin: "zhōu nián", trans: "anniversary", parts: ["冂", "吉", "年"], structures: "周：半包围结构，年：独体字结构" },
+            { word: "医术", pinyin: "yī shù", trans: "medical skill", parts: ["匚", "矢", "木"], structures: "医：半包围结构（匚+矢），术：独体/单一（含木）" },
+            { word: "指令", pinyin: "zhǐ lìng", trans: "instruction / command", parts: ["扌", "旨", "人", "マ"], structures: "指：左右结构（扌+旨），令：上下结构" },
+            { word: "董事长", pinyin: "dǒng shì zhǎng", trans: "chairman of the board", parts: ["艹", "董", "事", "长"], structures: "董：上下，事：上中下，长：独体字" },
+            { word: "字样", pinyin: "zì yàng", trans: "words / phraseology", parts: ["宀", "子", "木", "羊"], structures: "字：上下结构（宀+子），样：左右结构（木+羊）" },
+            { word: "照例", pinyin: "zhào lì", trans: "as a rule / usually", parts: ["灬", "亻", "列"], structures: "照：上下结构（昭+灬），例：左右结构（亻+列）" },
+            { word: "职员", pinyin: "zhí yuán", trans: "office worker / staff", parts: ["耳", "口", "贝"], structures: "职：左右结构（耳+只），员：上下结构（口+贝）" }
+        ];
+
+        let currentWordIndex = 0;
+        let writerInstances = [];
+
+        // 页面切换
+        function switchPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(`page-${pageId}`).classList.add('active');
+            document.getElementById(`nav-${pageId}`).classList.add('active');
+
+            if(pageId === 'game1') initGame1();
+            if(pageId === 'game2') initGame2();
+        }
+
+        // --- 学习界面逻辑 ---
+        function initLearnPage() {
+            const selector = document.getElementById('word-selector');
+            selector.innerHTML = '';
+            vocabulary.forEach((item, index) => {
+                const btn = document.createElement('button');
+                btn.className = `word-btn ${index === 0 ? 'active' : ''}`;
+                btn.innerText = item.word;
+                btn.onclick = () => selectWord(index);
+                selector.appendChild(btn);
+            });
+            selectWord(0);
+        }
+
+        function selectWord(index) {
+            currentWordIndex = index;
+            document.querySelectorAll('.word-btn').forEach((btn, idx) => {
+                btn.classList.toggle('active', idx === index);
+            });
+
+            const data = vocabulary[index];
+            document.getElementById('display-word').innerText = data.word;
+            document.getElementById('display-pinyin').innerText = data.pinyin;
+            document.getElementById('display-trans').innerText = data.trans;
+
+            // 部件展示
+            const compBox = document.getElementById('components-container');
+            compBox.innerHTML = '';
+            data.parts.forEach(p => {
+                compBox.innerHTML += `<span class="component-tag">${p}</span>`;
+            });
+            compBox.innerHTML += `<div style="margin-top:5px; font-size:14px; color:#666;">（${data.structures}）</div>`;
+
+            // 渲染生字笔顺格子
+            renderWriterBoxes(data.word);
+        }
+
+        function renderWriterBoxes(word) {
+            const container = document.getElementById('writer-container');
+            container.innerHTML = '';
+            writerInstances = [];
+
+            // 为每个汉字创建一个写字格
+            for (let i = 0; i < word.length; i++) {
+                const char = word[i];
+                const charId = `char-panel-${i}`;
+                
+                const panel = document.createElement('div');
+                panel.className = 'char-panel';
+                
+                const targetId = `target-${i}`;
+                panel.innerHTML = `
+                    <div id="${targetId}" class="writer-target"></div>
+                    <div class="control-btns">
+                        <button onclick="writerInstances[${i}].animateCharacter()">▶ 笔顺</button>
+                        <button onclick="writerInstances[${i}].quiz()">✏️ 描红</button>
+                    </div>
+                `;
+                container.appendChild(panel);
+
+                // 调用库渲染米字格背景及汉字
+                const writer = HanziWriter.create(targetId, char, {
+                    width: 150,
+                    height: 150,
+                    padding: 5,
+                    showOutline: true,
+                    strokeAnimationSpeed: 1, 
+                    delayBetweenStrokes: 300,
+                    gridLineColor: '#f1a9a0', // 米字格红线样式
+                    displayOutlineShadows: true
+                });
+                writerInstances.push(writer);
+            }
+        }
+
+        // --- 游戏一：连连看逻辑 ---
+        let selectedChinese = null;
+        let selectedEnglish = null;
+
+        function initGame1() {
+            const box = document.getElementById('game1-box');
+            document.getElementById('game1-msg').innerText = "";
+            box.innerHTML = '';
+
+            // 随机抽5个词用于连连看
+            let shuffled = [...vocabulary].sort(() => 0.5 - Math.random()).slice(0, 5);
+            let chList = shuffled.map(item => ({word: item.word, id: item.word}));
+            let enList = shuffled.map(item => ({trans: item.trans, id: item.word}));
+
+            // 打乱各自列的顺序
+            chList.sort(() => 0.5 - Math.random());
+            enList.sort(() => 0.5 - Math.random());
+
+            const colCh = document.createElement('div');
+            colCh.className = 'game1-col';
+            const colEn = document.createElement('div');
+            colEn.className = 'game1-col';
+
+            chList.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'game1-item';
+                div.innerText = item.word;
+                div.dataset.id = item.id;
+                div.onclick = () => selectGame1Item(div, 'ch');
+                colCh.appendChild(div);
+            });
+
+            enList.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'game1-item';
+                div.innerText = item.trans;
+                div.dataset.id = item.id;
+                div.onclick = () => selectGame1Item(div, 'en');
+                colEn.appendChild(div);
+            });
+
+            box.appendChild(colCh);
+            box.appendChild(colEn);
+        }
+
+        function selectGame1Item(el, type) {
+            if (el.classList.contains('matched')) return;
+
+            if (type === 'ch') {
+                if (selectedChinese) selectedChinese.classList.remove('selected');
+                selectedChinese = el;
+            } else {
+                if (selectedEnglish) selectedEnglish.classList.remove('selected');
+                selectedEnglish = el;
+            }
+            el.classList.add('selected');
+
+            // 检查配对
+            if (selectedChinese && selectedEnglish) {
+                if (selectedChinese.dataset.id === selectedEnglish.dataset.id) {
+                    selectedChinese.className = 'game1-item matched';
+                    selectedEnglish.className = 'game1-item matched';
+                    selectedChinese = null;
+                    selectedEnglish = null;
+                    checkGame1Win();
+                } else {
+                    // 匹配错误，闪烁后复原
+                    setTimeout(() => {
+                        if(selectedChinese) selectedChinese.classList.remove('selected');
+                        if(selectedEnglish) selectedEnglish.classList.remove('selected');
+                        selectedChinese = null;
+                        selectedEnglish = null;
+                    }, 400);
+                }
+            }
+        }
+
+        function checkGame1Win() {
+            const matchedCount = document.querySelectorAll('.game1-item.matched').length;
+            if (matchedCount === 10) {
+                document.getElementById('game1-msg').innerText = "🎉 太棒了！全部连对！";
+            }
+        }
+
+
+        // --- 游戏二：部件拼字游戏 ---
+        let currentGame2Word = null;
+
+        function initGame2() {
+            document.getElementById('game2-msg').innerText = "";
+            // 随机选一个词
+            currentGame2Word = vocabulary[Math.floor(Math.random() * vocabulary.length)];
+            
+            document.getElementById('game2-hint').innerHTML = `<strong>翻译提示：</strong> ${currentGame2Word.trans} (${currentGame2Word.pinyin})`;
+
+            const slotsBox = document.getElementById('game2-slots');
+            slotsBox.innerHTML = '';
+            // 根据目标词的汉字数建框
+            for(let i=0; i<currentGame2Word.word.length; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'game2-slot';
+                slot.dataset.index = i;
+                // 支持拖拽放置
+                slot.ondragover = (e) => e.preventDefault();
+                slot.ondrop = (e) => handleDrop(e, slot);
+                slotsBox.appendChild(slot);
+            }
+
+            // 提取正确的部件，并加入1-2个干扰部件
+            let parts = [...currentGame2Word.parts];
+            const distracors = ["火", "水", "𠂇", "辶", "女"];
+            while(parts.length < slotsBox.childElementCount + 2) {
+                let randomDist = distracors[Math.floor(Math.random()*distracors.length)];
+                if(!parts.includes(randomDist)) parts.push(randomDist);
+            }
+            parts.sort(() => 0.5 - Math.random()); // 打乱部件
+
+            const partsBox = document.getElementById('game2-parts');
+            partsBox.innerHTML = '';
+            parts.forEach((part, idx) => {
+                const partEl = document.createElement('div');
+                partEl.className = 'game2-part';
+                partEl.innerText = part;
+                partEl.draggable = true;
+                partEl.id = `part-${idx}`;
+                partEl.ondragstart = (e) => {
+                    e.dataTransfer.setData('text/plain', e.target.id);
+                };
+                partsBox.appendChild(partEl);
+            });
+            
+            // 为没有实现拖拽的移动端保留简单点击填字功能
+            setupClickAlternative();
+        }
+
+        function handleDrop(e, slot) {
+            e.preventDefault();
+            const id = e.dataTransfer.getData('text/plain');
+            const draggedEl = document.getElementById(id);
+            if(draggedEl) {
+                slot.innerText = draggedEl.innerText;
+                checkGame2Result();
+            }
+        }
+        
+        // 兼容备用方案：点击部件填入第一个空格
+        function setupClickAlternative() {
+            const parts = document.querySelectorAll('.game2-part');
+            parts.forEach(part => {
+                part.onclick = () => {
+                    const emptySlot = Array.from(document.querySelectorAll('.game2-slot')).find(s => s.innerText === '');
+                    if(emptySlot) {
+                        emptySlot.innerText = part.innerText;
+                        checkGame2Result();
+                    }
+                };
+            });
+            // 点击空格子清空
+            document.querySelectorAll('.game2-slot').forEach(s => {
+                s.onclick = () => { s.innerText = ''; };
+            });
+        }
+
+        function checkGame2Result() {
+            const slots = document.querySelectorAll('.game2-slot');
+            let userWord = "";
+            let isFull = true;
+            
+            slots.forEach(s => {
+                if(!s.innerText) isFull = false;
+                userWord += s.innerText;
+            });
+
+            if(!isFull) return;
+
+            // 验证是否通过字模包含部件或者刚好等同
+            let targetWord = currentGame2Word.word;
+            
+            // 简单逻辑：如果拼出的词刚好与目标词相同，或者组成字包含了放置的部件
+            // 这里为了简化判定，允许学生直接点击或者拼出类似结构的理解
+            let isCorrect = true;
+            for(let i=0; i<targetWord.length; i++){
+                let char = targetWord[i];
+                // 允许放入原字，或放入了正确的偏旁部件
+                let filled = slots[i].innerText;
+                if(char !== filled && !currentGame2Word.parts.includes(filled)){
+                    isCorrect = false;
+                }
+            }
+
+            if(isCorrect || userWord === targetWord) {
+                document.getElementById('game2-msg').innerText = `🎉 答对了！正确词语就是【${targetWord}】！`;
+                // 把格子直接修正为标准字显示
+                slots.forEach((s, i) => s.innerText = targetWord[i]);
+            } else {
+                document.getElementById('game2-msg').innerHTML = `<span style="color:red;">❌ 组合好像不对，再试一试！(可点击格子清空)</span>`;
+            }
+        }
+
+        // 初始化
+        window.onload = () => {
+            initLearnPage();
+        };
+    </script>
+</body>
+</html>
